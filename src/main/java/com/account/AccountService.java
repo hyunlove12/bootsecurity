@@ -32,6 +32,7 @@ public class AccountService implements UserDetailsService{
 		return User.builder()
 				.username(account.getUsername())
 				.password(account.getPassword())
+				//ROLE_라는 것을 붙여준다 -> 생성장에서
 				.roles(account.getRole())				
 				.build();
 	}
