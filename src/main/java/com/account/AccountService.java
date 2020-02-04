@@ -28,13 +28,15 @@ public class AccountService implements UserDetailsService{
 		if (account == null) {
 			throw new UsernameNotFoundException(username);
 		}
+		//UsernamePasswordAuthenticationFilter
+		//SecurityContextPersistenceFilter
 		
 		//account를 userdetails로 변환
 		return User.builder()
 				.username(account.getUsername())
 				.password(account.getPassword())
 				//ROLE_라는 것을 붙여준다 -> 생성장에서
-				.roles(account.getRole())				
+				.roles(account.getRole()) // .roles(account.getRole(), "USER") -> user는 모든 사람에게 기본적으로 권한이 들어가야 하기 때문				
 				.build();
 	}
 

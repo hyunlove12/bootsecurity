@@ -1,13 +1,23 @@
 package com.config;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.AccessDecisionVoter;
+import org.springframework.security.access.expression.SecurityExpressionHandler;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
+import org.springframework.security.web.access.expression.WebExpressionVoter;
 
 import com.account.AccountService;
 
@@ -15,6 +25,36 @@ import com.account.AccountService;
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter{
+	
+	
+	// 계층구조를 설정하는 방법 중 하나 -> voter가 사용하는 expressionHandler만 오버라이드
+	// authorizeRequests()설정에 .expressionHandler(expressionHandler()); 붙여주면 된다. 
+//	public SecurityExpressionHandler expressionHandler() {
+//		RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+//		roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER"); // ADMIN이 USER의 상위 개념이다.		
+		
+//		DefaultWebSecurityExpressionHandler handler = new DefaultWebSecurityExpressionHandler();
+//		handler.setRoleHierarchy(roleHierarchy);
+
+//		return handler;
+//	}
+		
+	
+	// 계층구조 설정을 위한 소스 -> 인가를 내는 객체(접근 권한)
+	// admin권한은 user에 대한 권한이 자동으로 생성된다
+	public AccessDecisionManager accessDecisionManager() {
+		RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+		roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER"); // ADMIN이 USER의 상위 개념이다.		
+		
+		DefaultWebSecurityExpressionHandler handler = new DefaultWebSecurityExpressionHandler();
+		handler.setRoleHierarchy(roleHierarchy);
+		WebExpressionVoter webExpressionVoter = new WebExpressionVoter();
+		webExpressionVoter.setExpressionHandler(handler);
+		// voter 목록
+		List<AccessDecisionVoter<? extends Object>> voters = Arrays.asList(webExpressionVoter);
+		return new AffirmativeBased(voters);
+	}
+	
 	
 	@Autowired
 	AccountService accountService;
@@ -29,9 +69,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		http.authorizeRequests()
 				.mvcMatchers("/", "/info", "/account/**").permitAll()
 				.mvcMatchers("/admin").hasRole("ADMIN") // admin은 ADMIN권한 필요
-				.anyRequest().authenticated() //그 외 어떠한 요청은 인증만 하면 된다.
-				.and()	//메소드 체이닝
-			.formLogin(); //form 로그인 사용 //하나의 필터가 처리
+				.mvcMatchers("/user").hasRole("USER") // user권한
+				.anyRequest().authenticated(); //그 외 어떠한 요청은 인증만 하면 된다.
+				//.expressionHandler(expressionHandler()); // expressionHandler를 override하는 방법
+				// .and()	//메소드 체이닝
+		http.formLogin(); //form 로그인 사용 //하나의 필터가 처리
 		http.httpBasic(); //httpbasic사용		// 하나의 필터가 처리 
 	}
 
