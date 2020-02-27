@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>login</title>
+</head>
+<body>
+	<h1>Login</h1>
+	<div th:if="${param.error}" >
+		Invalid username or password!
+	</div>
+	<!-- th:action -> 컨텍스트 루트 패스가 변경되는 경우 등에 유용한 옵션(action속성을 한번 감싸주는 것) -->
+	<form action="/login" method="post" th:action="@{/login}">
+		<p>username: <input type="text" name="username" /></p>
+		<p>password: <input type="password" name="password" /></p>
+		<p><input type="submit" value="Login" /></p>
+	</form>
+</body>
+</html>

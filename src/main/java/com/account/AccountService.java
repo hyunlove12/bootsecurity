@@ -24,6 +24,7 @@ public class AccountService implements UserDetailsService{
 		//UserDtails가 Account객체와 Principal과의 어댑터 역할
 		//UserDetailsService -> DAO를 이용하여 user정보 인증
 		//username을 이용하여 유저정보를 받아와서 userdetails로 리턴
+		// db에 있는 유저정보를 가져온다. 
 		Account account = accountRepository.findByUsername(username); //springjpa 가 자동으로 쿼리 생성
 		if (account == null) {
 			throw new UsernameNotFoundException(username);

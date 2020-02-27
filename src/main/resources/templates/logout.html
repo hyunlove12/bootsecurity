@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>logout</title>
+</head>
+<body>
+	<h1>logout</h1>
+	<!-- th:action -> 컨텍스트 루트 패스가 변경되는 경우 등에 유용한 옵션(action속성을 한번 감싸주는 것) -->
+	<form action="/logout" method="post" th:action="@{/logout}">
+		<p><input type="submit" value="Logout" /></p>
+	</form>
+</body>
+</html>

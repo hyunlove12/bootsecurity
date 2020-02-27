@@ -1,15 +1,17 @@
 package com.form;
 
 import java.security.Principal;
+import java.util.concurrent.Callable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.account.Account;
 import com.account.AccountContext;
 import com.account.AccountRepository;
+import com.common.SecurityLogger;
 
 @Controller
 public class SampleController {
@@ -57,4 +59,38 @@ public class SampleController {
 		model.addAttribute("message", "Hello User" + principal.getName());
 		return "user";
 	}
+	
+	@GetMapping("/async-handler")
+	@ResponseBody
+	public Callable<String> asyncHandler() {		
+		// 톰캣이 할당해준 nio쓰레드
+		// callable 안에 있는 쓰레드는 별도의 쓰레드
+		SecurityLogger.log("MVC");
+		// callable이 처리 되기 전 httpresponse를 반환 후.
+		// callable이 완료되면 다시 반환이 된다.
+		return () -> {
+			// 다른 쓰레드를 사용함에도 동일한 principal을 사용하게 해주는 필터
+			// -> webasyncmanagerintegrationfilter
+			SecurityLogger.log("Callable");
+			return "Async-Handler";
+		};
+		/* return new Callable<String>() {
+			@Override
+			public String call() throws Exception {
+				// 
+				SecurityLogger.log("Callable");
+				return "Async-Handler";
+			}
+		}; */
+	}
+	
+	@GetMapping("/async-service")
+	@ResponseBody
+	public String asyncService() {
+		SecurityLogger.log("MVC, before async service");
+		sampleService.asyncService();
+		SecurityLogger.log("MVC, after async service");
+		return "Async Service";
+	}
+	
 }

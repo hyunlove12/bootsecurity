@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>SignUp</title>
+</head>
+<body>	
+	<!--action 값을 th:action값으로 바꿔준다  -->
+	<form action="/signup" th:action="@{/signup}" th:object="${account}"  method="post" >
+		<!-- *사용시 object안에 있는 객체와 매핑  -->
+		<!-- csrf토큰을 자동으로 넣어준다(타임리프 2.1, jsp 폼태그)  -->
+		<p>username: <input type="text" th:field="*{username}" /></p>
+		<p>password: <input type="password" th:field="*{password}" /></p>
+		<p><input type="submit" value="SignUp" /></p>
+	</form>
+</body>
+</html>

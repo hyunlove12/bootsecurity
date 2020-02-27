@@ -1,9 +1,11 @@
 package com.form;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.account.Account;
 import com.account.AccountContext;
+import com.common.SecurityLogger;
 
 @Service
 public class SampleService {
@@ -38,4 +40,13 @@ public class SampleService {
 		System.out.println("+++++++++++++++++");
 		System.out.println(account.getUsername());
 	}
+	
+	@Async
+	public void asyncService() {
+		// async사용 시 쓰레드 공유가 안된다
+		SecurityLogger.log("Async service");
+		System.out.println("Async service is called");
+	}
+	
+	
 }

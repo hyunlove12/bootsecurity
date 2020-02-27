@@ -10,7 +10,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDecisionVoter;
-import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -18,6 +17,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
 
@@ -41,6 +41,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 //		return handler;
 //	}
 		
+	// SecurityContextPersistenceFilter
+	// 기존의 시큐리티컨텍스트를 읽어오거나 초기화
+	// 기본으로 사용하는 전략은 httpSession을 사용
 	
 	// 계층구조 설정을 위한 소스 -> 인가를 내는 객체(접근 권한)
 	// admin권한은 user에 대한 권한이 자동으로 생성된다
@@ -69,7 +72,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		//상충되는 설정의 경우 순서 필요 order
 		//logout filter, csrffilter 등등 15 개
 		http.authorizeRequests()
-				.mvcMatchers("/", "/info", "/account/**").permitAll()
+				.mvcMatchers("/", "/info", "/account/**", "/signup").permitAll()
 				.mvcMatchers("/admin").hasRole("ADMIN") // admin은 ADMIN권한 필요
 				.mvcMatchers("/user").hasRole("USER") // user권한
 				// .authorizeRequests()로 인하여 15개의 filter가 적용된다 -> anonymousAuthenticationfilter, filterSecurityInterceptor가 허용한다. 
@@ -78,8 +81,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				.anyRequest().authenticated(); //그 외 어떠한 요청은 인증만 하면 된다.
 				//.expressionHandler(expressionHandler()); // expressionHandler를 override하는 방법
 				// .and()	//메소드 체이닝
-		http.formLogin(); //form 로그인 사용 //하나의 필터가 처리
+		http.formLogin() //form 로그인 사용 //하나의 필터가 처리
+			.usernameParameter("username") // username 파라미터 -> 기본 로그인페이지에도 자동으로 변경 된다.
+			.passwordParameter("password") // password 파라미터 -> 기본 로그인페이지에도 자동으로 변경 된다.
+			.loginPage("/login") // 로그인 페이지 -> 필터가 등록 안된다(디폴트 로그인 페이지 제너레이팅) -> 로그아웃도 같이 등록 안된다. // 기본적으로 get요청, post요청은 auth필터가 처리
+			.permitAll(); // 커스터 마이징 시 반드시 필요
+			// .successForwardUrl("") // 성공시 보여지는 페이지 주소
+		
 		http.httpBasic(); //httpbasic사용		// 하나의 필터가 처리 
+		
+		http.logout()
+			.logoutUrl("/logout") // 로그아웃로직이 진행되는 주소
+			.logoutSuccessUrl("/") // 로그아웃 성공 시 리다이렉트 주소
+			// .addLogoutHandler()
+			//.logoutSuccessHandler(logoutSuccessHandler) // 성고 핸들러
+			.invalidateHttpSession(true); // session제거
+			//.deleteCookies("cookiename") // 쿠키 사용로그인시 해당 쿠키 제거
+		// http.csrf().disable() // csrf사용 안함
+		
+		// 컨텍스트 홀더를 어디까지 공유 할 것인가 -> 기본은 쓰레드 로컬
+		// SecurityContextHolder.MODE_INHERITABLETHREADLOCAL -> 현재 쓰레드의 하위 쓰레드까지 공유
+		SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
 	}
 
 	//있으면 기본 인증 안됨? -> Authentication없다고 나온다.
